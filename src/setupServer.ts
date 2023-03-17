@@ -12,6 +12,9 @@ import hpp from "hpp";
 import helmet from "helmet";
 import cookieSession from "cookie-session";
 import compression from "compression";
+import { Server } from "socket.io";
+import { createClient } from "redis";
+import { createAdapter } from "@socket.io/redis-adapter";
 import HTTP_STATUS from "http-status-codes";
 import "express-async-errors";
 import { config } from "./config";
@@ -64,17 +67,34 @@ export class ChitChatServer {
   private async startServer(app: Application): Promise<void> {
     try {
       const httpServer: http.Server = new http.Server(app);
+      const soketIO: Server = await this.createSoketIO(httpServer);
       this.startHttpServer(httpServer);
+      this.socketIOConnection(soketIO);
     } catch (error) {
       console.log(error);
     }
   }
 
-  private createSoketIO(httpServer: http.Server): void {}
+  private async createSoketIO(httpServer: http.Server): Promise<Server> {
+    const io: Server = new Server(httpServer, {
+      cors: {
+        origin: config.CLIENT_URL,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      },
+    });
+    const pubClient = createClient({ url: config.REDIS_HOST });
+    const subClient = pubClient.duplicate();
+    await Promise.all([pubClient.connect(), subClient.connect()]);
+    io.adapter(createAdapter(pubClient, subClient));
+    return io;
+  }
 
   private startHttpServer(httpServer: http.Server): void {
+    console.log(`Server is started with ${process.pid}`);
     httpServer.listen(SERVER_PORT, () => {
       console.log(`Server running on port ${SERVER_PORT}`);
     });
   }
+
+  private socketIOConnection(io: Server): void {}
 }
