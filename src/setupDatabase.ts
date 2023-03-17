@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 export default () => {
   const connect = () => {
     mongoose
-      .connect("mongodb://127.0.0.10:27017/chitchat")
+      .connect("mongodb://127.0.0.1:27017/chitchat")
       .then(() => {
         console.log("DB connected!!");
       })
