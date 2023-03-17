@@ -12,5 +12,6 @@ export default () => {
         return process.exit(1);
       });
   };
+  connect();
   mongoose.connection.on("disconnected", connect);
 };
