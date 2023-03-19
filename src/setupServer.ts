@@ -1,30 +1,21 @@
-import {
-  Application,
-  json,
-  urlencoded,
-  Response,
-  Request,
-  NextFunction,
-} from "express";
-import http from "http";
-import cors from "cors";
-import hpp from "hpp";
-import helmet from "helmet";
-import cookieSession from "cookie-session";
-import compression from "compression";
-import { Server } from "socket.io";
-import { createClient } from "redis";
-import { createAdapter } from "@socket.io/redis-adapter";
-import HTTP_STATUS from "http-status-codes";
-import "express-async-errors";
-import { config } from "./config";
-import applicationRoutes from "./routes";
-import {
-  CustomError,
-  IErrorResponse,
-} from "./shared/globals/helpers/error-handler";
+import { Application, json, urlencoded, Response, Request, NextFunction } from 'express';
+import http from 'http';
+import cors from 'cors';
+import hpp from 'hpp';
+import helmet from 'helmet';
+import cookieSession from 'cookie-session';
+import compression from 'compression';
+import { Server } from 'socket.io';
+import { createClient } from 'redis';
+import { createAdapter } from '@socket.io/redis-adapter';
+import Logger from 'bunyan';
+import HTTP_STATUS from 'http-status-codes';
+import 'express-async-errors';
+import { config } from '@root/config';
+import applicationRoutes from '@root/routes';
+import { CustomError, IErrorResponse } from '@global/helpers/error-handler';
 const SERVER_PORT = config.SERVER_PORT;
-
+const log: Logger = config.createLogger('server');
 export class ChitChatServer {
   private app: Application;
 
@@ -42,10 +33,10 @@ export class ChitChatServer {
   private securityMiddleware(app: Application): void {
     app.use(
       cookieSession({
-        name: "session",
+        name: 'session',
         keys: [config.SECRET_KEY_ONE!, config.SECRET_KEY_TWO!],
         maxAge: 24 * 7 * 3600000,
-        secure: config.NODE_ENV !== "development",
+        secure: config.NODE_ENV !== 'development'
       })
     );
     app.use(hpp());
@@ -55,40 +46,31 @@ export class ChitChatServer {
         origin: config.CLIENT_URL,
         credentials: true,
         optionsSuccessStatus: 200,
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
       })
     );
   }
 
   private standardMiddleware(app: Application): void {
     app.use(compression());
-    app.use(json({ limit: "50mb" }));
-    app.use(urlencoded({ extended: true, limit: "50mb" }));
+    app.use(json({ limit: '50mb' }));
+    app.use(urlencoded({ extended: true, limit: '50mb' }));
   }
 
   private routeMiddleware(app: Application): void {
     applicationRoutes(app);
   }
   private globalErrorHandler(app: Application): void {
-    app.all("*", (req: Request, res: Response) => {
-      res
-        .status(HTTP_STATUS.NOT_FOUND)
-        .json({ message: `${req.originalUrl} not found!` });
+    app.all('*', (req: Request, res: Response) => {
+      res.status(HTTP_STATUS.NOT_FOUND).json({ message: `${req.originalUrl} not found!` });
     });
-    app.use(
-      (
-        error: IErrorResponse,
-        req: Request,
-        res: Response,
-        next: NextFunction
-      ) => {
-        console.log(error);
-        if (error instanceof CustomError) {
-          return res.status(error.statusCode).json(error.serializeErrors());
-        }
-        next();
+    app.use((error: IErrorResponse, _req: Request, res: Response, next: NextFunction) => {
+      log.error(error);
+      if (error instanceof CustomError) {
+        return res.status(error.statusCode).json(error.serializeErrors());
       }
-    );
+      next();
+    });
   }
 
   private async startServer(app: Application): Promise<void> {
@@ -98,7 +80,7 @@ export class ChitChatServer {
       this.startHttpServer(httpServer);
       this.socketIOConnection(soketIO);
     } catch (error) {
-      console.log(error);
+      log.error(error);
     }
   }
 
@@ -106,8 +88,8 @@ export class ChitChatServer {
     const io: Server = new Server(httpServer, {
       cors: {
         origin: config.CLIENT_URL,
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      },
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+      }
     });
     const pubClient = createClient({ url: config.REDIS_HOST });
     const subClient = pubClient.duplicate();
@@ -117,11 +99,13 @@ export class ChitChatServer {
   }
 
   private startHttpServer(httpServer: http.Server): void {
-    console.log(`Server is started with ${process.pid}`);
+    log.info(`Server is started with ${process.pid}`);
     httpServer.listen(SERVER_PORT, () => {
-      console.log(`Server running on port ${SERVER_PORT}`);
+      log.info(`Server running on port ${SERVER_PORT}`);
     });
   }
 
-  private socketIOConnection(io: Server): void {}
+  private socketIOConnection(io: Server): void {
+    log.info('socketIOConnection');
+  }
 }

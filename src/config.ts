@@ -1,4 +1,5 @@
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
+import bunyan from 'bunyan';
 dotenv.config({});
 
 class Config {
@@ -11,7 +12,7 @@ class Config {
   public SERVER_PORT: string | undefined;
   public REDIS_HOST: string | undefined;
 
-  private readonly DEFAULT_MONGO_URI = "mongodb://127.0.0.1:27017/chitchat";
+  private readonly DEFAULT_MONGO_URI = 'mongodb://127.0.0.1:27017/chitchat';
 
   constructor() {
     this.MONGO_URI = process.env.MONOGO_URI || this.DEFAULT_MONGO_URI;
@@ -22,6 +23,10 @@ class Config {
     this.SECRET_KEY_TWO = process.env.SECRET_KEY_TWO;
     this.SERVER_PORT = process.env.SERVER_PORT;
     this.REDIS_HOST = process.env.REDIS_HOST;
+  }
+
+  public createLogger(name: string): bunyan {
+    return bunyan.createLogger({ name, level: 'debug' });
   }
 
   public validateConfig(): void {
