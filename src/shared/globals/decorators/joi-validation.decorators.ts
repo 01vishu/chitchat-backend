@@ -5,18 +5,17 @@ import { ObjectSchema } from 'joi';
 
 type IJoiDecorator = (target: any, key: string, descriptor: PropertyDescriptor) => void;
 
-export function joiValidation(schmea: ObjectSchema): IJoiDecorator {
+export function joiValidation(schema: ObjectSchema): IJoiDecorator {
   return (_target: any, _key: string, descriptor: PropertyDescriptor) => {
-    const orignalMethod = descriptor.value;
+    const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
       const req: Request = args[0];
-      // ValidateAsync or validate
-      const { error } = await Promise.resolve(schmea.validate(req.body));
+      const { error } = await Promise.resolve(schema.validate(req.body));
       if (error?.details) {
         throw new JoiRequestValidationError(error.details[0].message);
       }
-      return orignalMethod.apply(this, args);
+      return originalMethod.apply(this, args);
     };
     return descriptor;
   };

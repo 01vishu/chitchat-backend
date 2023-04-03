@@ -30,6 +30,7 @@ class Config {
     this.CLIENT_URL = process.env.CLIENT_URL;
     this.CLOUD_API_KEY = process.env.CLOUD_API_KEY;
     this.CLOUD_API_SECRET = process.env.CLOUD_API_SECRET;
+    this.CLOUD_NAME = process.env.CLOUD_NAME;
   }
 
   public createLogger(name: string): bunyan {
