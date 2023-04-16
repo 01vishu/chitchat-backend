@@ -1,15 +1,15 @@
 import { DoneCallback, Job } from 'bull';
 import Logger from 'bunyan';
 import { config } from '@root/config';
-import { authService } from '@service/db/auth.service';
+import { userService } from '@service/db/user.service';
 
 const log: Logger = config.createLogger('authWorker');
 
-class AuthWorker {
-  async addAuthUserToDB(job: Job, done: DoneCallback): Promise<void> {
+class UserWorker {
+  async addUserToDB(job: Job, done: DoneCallback): Promise<void> {
     try {
       const { value } = job.data;
-      await authService.createAuthUser(value);
+      await userService.addUserData(value);
       job.progress(100);
       done(null, job.data);
     } catch (error) {
@@ -19,4 +19,4 @@ class AuthWorker {
   }
 }
 
-export const authWorker: AuthWorker = new AuthWorker();
+export const userWorker: UserWorker = new UserWorker();
