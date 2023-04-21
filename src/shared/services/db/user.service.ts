@@ -10,20 +10,22 @@ class UserService {
     const users: IUserDocument[] = await UserModel.aggregate([
       { $match: { _id: new mongoose.Types.ObjectId(userId) } },
       { $lookup: { from: 'Auth', localField: 'authId', foreignField: '_id', as: 'authId' } },
-      { $unwind: 'authId' },
+      { $unwind: '$authId' },
       { $project: this.aggreagateProject() }
     ]);
     return users[0];
   }
+
   public async getUserByAuthId(authId: string): Promise<IUserDocument> {
     const users: IUserDocument[] = await UserModel.aggregate([
       { $match: { authId: new mongoose.Types.ObjectId(authId) } },
       { $lookup: { from: 'Auth', localField: 'authId', foreignField: '_id', as: 'authId' } },
-      { $unwind: 'authId' },
+      { $unwind: '$authId' },
       { $project: this.aggreagateProject() }
     ]);
     return users[0];
   }
+
   private aggreagateProject() {
     return {
       _id: 1,

@@ -14,7 +14,7 @@ interface IMailOptions {
 
 const log: Logger = config.createLogger('mailOptions');
 
-sendGridMail.setApiKey(config.SENDGRID_API_KEY);
+sendGridMail.setApiKey(config.SENDGRID_API_KEY!);
 
 class MailTransport {
   public async sendEmail(recevierEmail: string, subject: string, body: string): Promise<void> {
@@ -31,13 +31,13 @@ class MailTransport {
       port: 587,
       secure: false,
       auth: {
-        user: config.SENDER_EMAIL,
-        pass: config.SENDER_EMAIL_PASSWORD
+        user: config.SENDER_EMAIL!,
+        pass: config.SENDER_EMAIL_PASSWORD!
       }
     });
 
     const mailOptions: IMailOptions = {
-      from: `ChitChat App <${config.SENDER_EMAIL}>`,
+      from: `ChitChat App <${config.SENDER_EMAIL!}>`,
       to: recevierEmail,
       subject,
       html: body
@@ -54,7 +54,7 @@ class MailTransport {
   }
   private async productionEmailSender(recevierEmail: string, subject: string, body: string): Promise<void> {
     const mailOptions: IMailOptions = {
-      from: `ChitChat App <${config.SENDER_EMAIL}>`,
+      from: `ChitChat App <${config.SENDER_EMAIL!}>`,
       to: recevierEmail,
       subject,
       html: body
